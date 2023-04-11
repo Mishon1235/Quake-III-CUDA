@@ -1,5 +1,4 @@
-
-// System includes
+	// System includes
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -7,10 +6,8 @@
 #include <time.h>
 #include <chrono>
 #include "fun.h"
-	// CUDA runtime
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
-
 	// Helper functions and utilities to work with CUDA
 #include <helper_functions.h>
 #include <helper_cuda.h>
@@ -25,7 +22,7 @@ float *D_F  = (float *)malloc( N * sizeof(  float  ) );
 float *D_CPU_N  = (float *)malloc( N * sizeof(  float  ) ); 
 float *D_CPU_Q  = (float *)malloc( N * sizeof(  float  ) ); 
 float *D_CPU_NEWTON  = (float *)malloc( N * sizeof(  float  ) );
-
+// Initialaizing variables
 size_t size = N * sizeof(float);
 
 
@@ -41,25 +38,20 @@ cudaMallocManaged(&A_GPU, size);
 cudaMallocManaged(&B_GPU, size); 
  float *C_GPU;
 cudaMallocManaged(&C_GPU, size); 
-
+// Initialaizing variables on GPU
 float *a, *b, *c, *d;
 cudaMalloc((void **)&a, size);
 cudaMalloc((void **)&b, size);
 cudaMalloc((void **)&c, size);
 cudaMalloc((void **)&d, size);
  
-			//cudaMemcpy(d, a, size, cudaMemcpyHostToDevice);
-
-
-
-
-
-
-
-int block=32, threads=32;//do zrobienia
+			
+int block=32, threads=32;
+	//Setting sizes of CUDA kernels
 init(A,N);
 init(B,N);
 init(C,N);
+	// Initialiazing data on arrays
 for(int i=0; i<N; i++)
 {
 A_GPU[i]=A[i];
@@ -67,7 +59,7 @@ B_GPU[i]=B[i];
 C_GPU[i]=C[i];
 
 }
-	//NAIVE
+	//Passing data to GPU arrays
 clock_t pocz = clock();
 insqrt(A,B,C,D_CPU_N,N);
 clock_t kon = clock();
@@ -84,7 +76,7 @@ pocz = clock();
 Newton(A,B,C,D_CPU_NEWTON,N);
 kon = clock();
 double msec5 = double(kon-pocz)*1000/CLOCKS_PER_SEC;
-
+//Calculation inverse square root on CPU
 
 /*--------------------------------------------------GPU---------------------------------------------------*/
 
@@ -108,11 +100,12 @@ insqrtCUDAN<<< block, threads>>>(A_GPU,B_GPU,C_GPU,D_GPU_NEWTON,N);
 cudaDeviceSynchronize();
 kon = clock();
 double msec6 = double(kon-pocz)*1000/CLOCKS_PER_SEC;
+//Calculation inverse square root on GPU
 
 
-
-/*----------------------------------------Co to jest to fast?-Sonic---------------------------------------------*/
+/*-------------------------------------------------------------------------------------*/
 //////Fast//////
+	//Passing data to GPU using cudaMemcpy funtion(it is presumably faster then cudaMallocManaged)
 cudaMemcpy(a, A, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(b, B, size, cudaMemcpyHostToDevice);
 		cudaMemcpy(c, C, size, cudaMemcpyHostToDevice);
@@ -152,7 +145,7 @@ for(int i=0; i<=10;++i){printf("CPU_Naive[%d]=%f,	GPU_Naive[%d]=%f,		CPU_Quake[%
 			i,D_CPU_N[i],		i,D_GPU_N[i],			i,D_CPU_Q[i],			i,D_GPU_Q[i],			i,D_CPU_NEWTON[i],		i,D_GPU_NEWTON[i]);}
 
 printf("res=%f czas=%f \n",e7,t7);
-
+//Printing times of different funtctions
 free(A);
 free(B);
 free(C);
@@ -170,5 +163,5 @@ cudaFree(a);
 cudaFree(b);
 cudaFree(c);  
 cudaFree(d);  
-
+//Freeing data
   }
